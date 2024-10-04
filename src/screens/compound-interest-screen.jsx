@@ -42,8 +42,24 @@ export default function CompoundInterestScreen() {
 
   // función para darle formato a los números
   const formatNumber = (number) => {
-    const cleanNumber = number.replace(/\D/g, ''); // eliminamos todo lo que no sea dígito
-    return cleanNumber.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // agregamos los puntos como separadores de miles
+    if (!number) return '';
+  
+  // Convertimos el número en string con dos decimales
+  const formattedNumber = parseFloat(number).toFixed(2);
+
+  // Separamos la parte entera y decimal
+  const [integerPart, decimalPart] = formattedNumber.split('.');
+
+  // Formateamos la parte entera con separador de miles
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  // Retornamos el número con coma como separador decimal
+  return `${formattedInteger},${decimalPart}`;
+  };
+
+  const handleInputChange = (value, setValue) => {
+    const cleanedValue = value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');  // Convertimos ',' a '.' para decimales
+    setValue(cleanedValue);
   };
 
   // función para realizar los cálculos
@@ -54,22 +70,22 @@ export default function CompoundInterestScreen() {
       switch (selectedCalculation) {
         case 'amount':
           calcResult = calculateAmountComp(parseFloat(capital), parseFloat(interestRate), interestRateType, capitalizationType, parseFloat(time));
-          setResult(`El monto final compuesto es: ${formatNumber(calcResult.toString())}`);
+          setResult(`El monto final compuesto es: ${formatNumber(calcResult.toFixed(2).toString())}`);
           break;
 
         case 'capital':
           calcResult = calculateCapitalComp(parseFloat(compoundAmount), parseFloat(interestRate), interestRateType, capitalizationType, parseFloat(time));
-          setResult(`El capital inicial es: ${formatNumber(calcResult.toString())}`);
+          setResult(`El capital inicial es: ${formatNumber(calcResult.toFixed(2).toString())}`);
           break;
 
         case 'rate1':
           calcResult = calculateInterestRate(parseFloat(compoundAmount), parseFloat(capital), interestRateType, capitalizationType, parseFloat(time));
-          setResult(`La tasa de interés efectiva es: ${formatNumber(calcResult.toString())}`);
+          setResult(`La tasa de interés efectiva es: ${formatNumber(calcResult.toFixed(4).toString())}`);
           break;
 
         case 'rate2':
           calcResult = calculateInterestRate2(parseFloat(compoundAmount), parseFloat(capital));
-          setResult(`La tasa de interés es: ${formatNumber(calcResult.toString())}`);
+          setResult(`La tasa de interés es: ${formatNumber(calcResult.toFixed(4).toString())}`);
           break;
 
         case 'time':
@@ -91,8 +107,8 @@ export default function CompoundInterestScreen() {
       <Text className={`mb-2 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
       <TextInput
         className={`p-2 rounded-md ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-700'} ${isDisabled ? 'opacity-50' : ''}`}
-        value={formatNumber(value)}
-        onChangeText={(text) => setValue(text.replace(/\./g, ''))}  // guardamos el valor sin formato
+        value={value}
+        onChangeText={(text) => handleInputChange(text, setValue)}  // guardamos el valor sin formato
         keyboardType="numeric"
         editable={!isDisabled}
       />

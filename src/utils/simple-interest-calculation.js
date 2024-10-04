@@ -3,7 +3,7 @@
 // función para calcular el capital
 export const calculateCapital = (interest, rateInterest, time) => {
     const result = interest / ((rateInterest / 100) * time);
-    return parseFloat(result.toFixed(2));
+    return parseFloat(result);
   };
   
   export const calculateCapitalWithAmount = (amount, rateInterest, time) => {
@@ -13,7 +13,7 @@ export const calculateCapital = (interest, rateInterest, time) => {
 // función para calcular el monto final
   export const calculateFinalAmount = (capital, rateInterest, time) => {
     const result = capital * (1 + (rateInterest / 100) * time);
-    return parseFloat(result.toFixed(2));
+    return parseFloat(result);
   };
   
   export const calculateFinalAmountWithInterest = (capital, interest) => {
@@ -23,7 +23,7 @@ export const calculateCapital = (interest, rateInterest, time) => {
 // función para calcular el interés
   export const calculateInterest = (capital, rateInterest, time) => {
     const result = capital * (rateInterest / 100) * time;
-    return parseFloat(result.toFixed(2));
+    return parseFloat(result);
   };
   
   export const calculateInterestWithAmount = (capital, amount) => {
@@ -33,7 +33,7 @@ export const calculateCapital = (interest, rateInterest, time) => {
 // función para calcular la tasa de interés
   export const calculateRateInterest = (capital, interest, time) => {
     const result = (interest / (capital * time)) * 100;
-    return parseFloat(result.toFixed(2));
+    return parseFloat(result);
   };
   
   export const calculateRateInterestWithAmount = (capital, amount, time) => {

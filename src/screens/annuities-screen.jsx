@@ -7,9 +7,8 @@ import {
   calculateFinalValue,
   calculateCurrentValue,
   calculateAnnuityValue
-} from '../utils/annuities'; // importamos las funciones para los calculos
+} from '../utils/annuities';
 
-// creamos un array para la opción que deseamos calcular
 const calculationOptions = [
   { label: 'Valor Final', value: 'finalValue' },
   { label: 'Valor Actual', value: 'currentValue' },
@@ -17,9 +16,8 @@ const calculationOptions = [
   { label: 'Periodo / Tiempo', value: 'time' },
 ];
 
-// creamos un array para la opción de tiempo a la que querramos calcular
 const frequencyOptions = [
-  { label: 'Diarío', value: 'daily' },
+  { label: 'Diario', value: 'daily' },
   { label: 'Semanal', value: 'weekly' },
   { label: 'Mensual', value: 'monthly' },
   { label: 'Semestral', value: 'semiannually' },
@@ -37,36 +35,50 @@ export default function AnnuitiesScreen() {
   const { isDarkMode } = useTheme();
   const [result, setResult] = useState(null);
 
-  // función para darle formato a los números
+  // Función para darle formato a los números
   const formatNumber = (number) => {
-    const cleanNumber = number.replace(/\D/g, ''); // eliminamos todo lo que no sea dígito
-    return cleanNumber.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // agregamos los puntos como separadores de miles
+    if (!number) return '';
+  
+  // Convertimos el número en string con dos decimales
+  const formattedNumber = parseFloat(number).toFixed(2);
+
+  // Separamos la parte entera y decimal
+  const [integerPart, decimalPart] = formattedNumber.split('.');
+
+  // Formateamos la parte entera con separador de miles
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  // Retornamos el número con coma como separador decimal
+  return `${formattedInteger},${decimalPart}`;
   };
 
-  // función para realizar los cálculos
+  const handleInputChange = (value, setValue) => {
+    const cleanedValue = value.replace(/[^0-9.,]/g, '').replace(/,/g, '.');  // Convertimos ',' a '.' para decimales
+    setValue(cleanedValue);
+  };
+
   const handleCalculate = () => {
     let calcResult;
-
     try {
       switch (selectedCalculation) {
         case 'finalValue':
           calcResult = calculateFinalValue(parseFloat(interestRate), parseFloat(annuityValue), parseFloat(time));
-          setResult(`El valor final es: ${formatNumber(calcResult.toString())}`);
+          setResult(`El valor final es: ${formatNumber(calcResult.toFixed(2).toString())}`);
           break;
 
         case 'currentValue':
           calcResult = calculateCurrentValue(parseFloat(annuityValue), parseFloat(interestRate), parseFloat(time));
-          setResult(`El valor presente es: ${formatNumber(calcResult.toString())}`);
+          setResult(`El valor presente es: ${formatNumber(calcResult.toFixed(2).toString())}`);
           break;
 
         case 'annuityValue':
           calcResult = calculateAnnuityValue(parseFloat(finalValue), parseFloat(interestRate), parseFloat(time));
-          setResult(`El valor de la anualidad es: ${formatNumber(calcResult.toString())}`);
+          setResult(`El valor de la anualidad es: ${formatNumber(calcResult.toFixed(2).toString())}`);
           break;
 
         case 'time':
           calcResult = calculateTime(parseFloat(finalValue), parseFloat(annuityValue), parseFloat(interestRate));
-          setResult(`El Tiempo requerido es: ${formatNumber(calcResult.toString())}`);
+          setResult(`El Tiempo requerido es: ${calcResult}`);
           break;
 
         default:
@@ -77,21 +89,19 @@ export default function AnnuitiesScreen() {
     }
   };
 
-  // función para renderizar los inputs con formateo dinámico
   const renderInput = (label, value, setValue, isDisabled) => (
     <View className="mb-4">
       <Text className={`mb-2 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
       <TextInput
         className={`p-2 rounded-md ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-700'} ${isDisabled ? 'opacity-50' : ''}`}
-        value={formatNumber(value)}
-        onChangeText={(text) => setValue(text.replace(/\./g, ''))}  // guardamos el valor sin formato
+        value={value}
+        onChangeText={(text) => handleInputChange(text, setValue)}
         keyboardType="numeric"
         editable={!isDisabled}
       />
     </View>
   );
 
-  // función para renderizar los dropdowns
   const renderDropdown = (label, selectedValue, onValueChange, options) => (
     <View className="mb-4">
       <Text className={`mb-2 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{label}</Text>

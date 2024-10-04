@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useTheme } from '../context/theme-context';
 import { useState } from 'react';
@@ -9,30 +9,32 @@ import {
   calculateGradientADecreasingVF,
   calculateGradientGIncreasingVP,
   calculateGradientGIncreasingVF,
-  calculateGradientGDecreasingVP,
-  calculateGradientGDecreasingVF,
-} from '../utils/gradient'; // importamos las funciones para los calculos
+  calculateGradientAIncreasingPerpetualVP,
+  calculateGradientAIncreasingAnticipatedVF
+} from '../utils/gradient'; // Importamos las funciones para los cálculos
 
-// creamos un array para escoger el tipo de gradiente
-const gradientTypes = [
-  { label: 'Gradiente Aritmerico', value: 'arithmetic' },
-  { label: 'Gradiente Geometrico', value: 'geometric' },
+// Opciones de tiempo
+const timeOptions = [
+  { label: 'Años', value: 'years' },
+  { label: 'Meses', value: 'months' },
+  { label: 'Días', value: 'days' },
+  { label: 'Año/Mes/Día', value: 'combined' }
 ];
 
-// creamos un array para seleccionar la opción de gradienete aritmetico que deseamos calcular
+// Opciones de gradiente aritmético
 const arithmeticOptions = [
-  { label: 'Valor precente creciente A', value: 'increasingPresentA' },
-  { label: 'Valor presente decreciente A', value: 'decreasingPresentA' },
+  { label: 'Valor presente creciente A', value: 'increasingPresentA' },
   { label: 'Valor futuro creciente A', value: 'increasingFutureA' },
+  { label: 'Valor presente decreciente A', value: 'decreasingPresentA' },
   { label: 'Valor futuro decreciente A', value: 'decreasingFutureA' },
+  { label: 'Valor presente creciente perpetuo A', value: 'increasingPresentPerpetualA' },
+  { label: 'Valor futuro creciente anticipado A', value: 'increasingFutureAnticipatedA' },
 ];
 
-// creamos un array para seleccionar la opción de gradienete aritmetico que deseamos calcular
+// Opciones de gradiente geométrico
 const geometricOptions = [
-  { label: 'Valor precente creciente G', value: 'increasingPresentG' },
-  { label: 'Valor presente decreciente G', value: 'decreasingPresentG' },
+  { label: 'Valor presente creciente G', value: 'increasingPresentG' },
   { label: 'Valor futuro creciente G', value: 'increasingFutureG' },
-  { label: 'Valor futuro decreciente G', value: 'decreasingFutureG' },
 ];
 
 export default function GradientScreen() {
@@ -41,17 +43,42 @@ export default function GradientScreen() {
   const [seriesPayments, setSeriesPayments] = useState('');
   const [interestRate, setInterestRate] = useState('');
   const [variation, setVariation] = useState('');
-  const [periods, setPeriods] = useState('');
+  const [timeValue, setTimeValue] = useState(''); // Este será el campo de entrada para años/meses/días
+  const [timeType, setTimeType] = useState('years'); // Selección del tipo de tiempo
+  const [years, setYears] = useState('');
+  const [months, setMonths] = useState('');
+  const [days, setDays] = useState('');
   const [result, setResult] = useState(null);
   const { isDarkMode } = useTheme();
 
-  // función para darle formato a los números
-  const formatNumber = (number) => {
-    const cleanNumber = number.replace(/\D/g, ''); // eliminamos todo lo que no sea dígito
-    return cleanNumber.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // agregamos los puntos como separadores de miles
+  // Función para convertir la entrada combinada de año/mes/día a una sola unidad de periodos
+  const convertToPeriods = () => {
+    if (timeType === 'combined') {
+      // Convertimos a meses o días según la lógica que requieras
+      return (parseFloat(years || 0) * 12) + parseFloat(months || 0) + (parseFloat(days || 0) / 30); // Tiempo en meses
+    } else {
+      // Si se selecciona años, meses o días, usamos directamente el valor ingresado
+      return parseFloat(timeValue);
+    }
   };
 
-  // función para realizar los cálculos
+  const formatNumber = (number) => {
+    if (!number) return '';
+    
+    // Convertimos el número en string con dos decimales
+    const formattedNumber = parseFloat(number).toFixed(2);
+  
+    // Separamos la parte entera y decimal
+    const [integerPart, decimalPart] = formattedNumber.split('.');
+  
+    // Formateamos la parte entera con separador de miles
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  
+    // Retornamos el número con coma como separador decimal
+    return `${formattedInteger},${decimalPart}`;
+  };
+
+  // Función para realizar los cálculos
   const handleCalculate = () => {
     let calcResult;
 
@@ -59,59 +86,67 @@ export default function GradientScreen() {
       const paymentSeries = parseFloat(seriesPayments);
       const variationG = parseFloat(variation);
       const interestRateValue = parseFloat(interestRate);
-      const numPeriod = parseFloat(periods);
+      const numPeriod = convertToPeriods(); // Usamos la función para convertir a periodos
 
       if (gradientType === 'arithmetic') {
         switch (calculationType) {
           case 'increasingPresentA':
             calcResult = calculateGradientAIncreasingVP(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor presente cresiente es: ${formatNumber(calcResult.toFixed(2).toString())}`)
             break;
           case 'decreasingPresentA':
             calcResult = calculateGradientADecreasingVP(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor presente decreciente es: ${formatNumber(calcResult.toFixed(2).toString())}`)
             break;
           case 'increasingFutureA':
             calcResult = calculateGradientAIncreasingVF(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor futuro creciente es: ${formatNumber(calcResult.toFixed(2).toString())}`)
             break;
           case 'decreasingFutureA':
             calcResult = calculateGradientADecreasingVF(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor futuro decrecreciente es: ${formatNumber(calcResult.toFixed(2).toString())}`)
+            break;
+            case 'increasingPresentPerpetualA':
+            calcResult = calculateGradientAIncreasingPerpetualVP(paymentSeries, variationG, interestRateValue);
+            setResult(`El valor presente creciente perpetuo es: ${formatNumber(calcResult.toFixed(2).toString())}`)
+            break;
+          case 'increasingFutureAnticipatedA':
+            calcResult = calculateGradientAIncreasingAnticipatedVF(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor futuro creciente anticipado es: ${formatNumber(calcResult.toFixed(2).toString())}`)
             break;
         }
       } else if (gradientType === 'geometric') {
         switch (calculationType) {
           case 'increasingPresentG':
             calcResult = calculateGradientGIncreasingVP(paymentSeries, variationG, interestRateValue, numPeriod);
-            break;
-          case 'decreasingPresentG':
-            calcResult = calculateGradientGDecreasingVP(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor presente creciente es: ${formatNumber(calcResult)}`);
             break;
           case 'increasingFutureG':
             calcResult = calculateGradientGIncreasingVF(paymentSeries, variationG, interestRateValue, numPeriod);
-            break;
-          case 'decreasingFutureG':
-            calcResult = calculateGradientGDecreasingVF(paymentSeries, variationG, interestRateValue, numPeriod);
+            setResult(`El valor futuro creciente es: ${formatNumber(calcResult)}`);
             break;
         }
       }
-      setResult(`Resultado: ${calcResult}`);
     } catch (error) {
-      error.Alert.alert('Error', 'Por favor ingresa valores numéricos válidos.');
+      Alert.alert('Error', 'Por favor ingresa valores numéricos válidos.');
     }
   };
 
-  // función para renderizar los inputs con formateo dinámico
-  const renderInput = (label, value, setValue) => (
+  // Función para renderizar los inputs con formateo dinámico
+  const renderInput = (label, value, setValue, isDisabled = false) => (
     <View className="mb-4">
       <Text className={`mb-2 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
       <TextInput
-        className={`p-2 rounded-md ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-700'}`}
-        value={formatNumber(value)}
-        onChangeText={(text) => setValue(text.replace(/\./g, ''))}  // guardamos el valor sin formato
+        className={`p-2 rounded-md ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-700'} ${isDisabled ? 'opacity-50' : ''}`}
+        value={value}
+        onChangeText={(text) => setValue(text)}
         keyboardType="numeric"
+        editable={!isDisabled}
       />
     </View>
   );
 
-  // función para renderizar los dropdowns
+  // Función para renderizar los dropdowns
   const renderDropdown = (label, selectedValue, onValueChange, options) => (
     <View className="mb-4">
       <Text className={`mb-2 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{label}</Text>
@@ -136,10 +171,13 @@ export default function GradientScreen() {
           Calculadora de Gradientes
         </Text>
         
-        {renderDropdown('Seleccione el tipo de gradiente a seleccionar', gradientType, setGradientType, gradientTypes)}
-        
+        {renderDropdown('Seleccione el tipo de gradiente', gradientType, setGradientType, [
+          { label: 'Gradiente Aritmético', value: 'arithmetic' },
+          { label: 'Gradiente Geométrico', value: 'geometric' }
+        ])}
+
         {renderDropdown(
-          'Calculation Type', 
+          'Tipo de cálculo', 
           calculationType, 
           setCalculationType, 
           gradientType === 'arithmetic' ? arithmeticOptions : geometricOptions
@@ -148,7 +186,21 @@ export default function GradientScreen() {
         {renderInput('Serie de pagos', seriesPayments, setSeriesPayments)}
         {renderInput('Variación', variation, setVariation)}
         {renderInput('Tasa de interés (%)', interestRate, setInterestRate)}
-        {renderInput('Número de periodos', periods, setPeriods)}
+
+        {/* Nuevo dropdown para seleccionar el tipo de tiempo */}
+        {renderDropdown('Tiempo en', timeType, setTimeType, timeOptions)}
+
+        {/* Si el usuario selecciona la opción combinada, mostramos tres campos para años, meses y días */}
+        {timeType === 'combined' ? (
+          <>
+            {renderInput('Años', years, setYears)}
+            {renderInput('Meses', months, setMonths)}
+            {renderInput('Días', days, setDays)}
+          </>
+        ) : (
+          // Si selecciona años, meses o días, mostramos solo un campo
+          renderInput('Tiempo', timeValue, setTimeValue)
+        )}
 
         <TouchableOpacity
           className={`p-4 rounded-md ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'}`}

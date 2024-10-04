@@ -1,9 +1,12 @@
-// tailwind.config.js
-/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./App.{js,jsx}", "./src/components/**/*.{js,jsx}", "./src/screens/**/*.{js,jsx}"],
+  content: ["./App.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'nunito': ['Nunito_400Regular'],
+        'nunito-bold': ['Nunito_700Bold'],
+      },
+    },
   },
   plugins: [],
-};
+}
